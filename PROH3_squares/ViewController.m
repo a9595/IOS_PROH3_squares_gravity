@@ -10,15 +10,13 @@
 #import "ViewController.h"
 
 
-
-
 @interface ViewController ()
 
 @end
 
 @implementation ViewController
-UIDynamicAnimator* _animator;
-UIGravityBehavior* _gravity;
+UIDynamicAnimator *_animator;
+UIGravityBehavior *_gravity;
 UICollisionBehavior *_collision;
 
 - (void)viewDidLoad {
@@ -26,6 +24,10 @@ UICollisionBehavior *_collision;
     UIView *square = [[UIView alloc] initWithFrame:CGRectMake(20.0f, 100.0f, 300.0f, 200.0f)];
     [square setBackgroundColor:[UIColor redColor]];
     [self.view addSubview:square];
+
+    UIView *barrier = [[UIView alloc] initWithFrame:CGRectMake(0,300,130,20)];
+    [barrier setBackgroundColor:[UIColor grayColor]];
+    [self.view addSubview:barrier];
 
     [UIView animateWithDuration:0.3f
                           delay:0.0f
@@ -39,7 +41,7 @@ UICollisionBehavior *_collision;
     _gravity = [[UIGravityBehavior alloc] initWithItems:@[square]];
 
     [_animator addBehavior:_gravity];
-    
+
 
     _collision = [[UICollisionBehavior alloc] initWithItems:@[square]];
     [_collision setTranslatesReferenceBoundsIntoBoundary:YES];
