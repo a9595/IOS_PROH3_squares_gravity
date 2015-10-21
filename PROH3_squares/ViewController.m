@@ -19,9 +19,13 @@ UIDynamicAnimator *_animator;
 UIGravityBehavior *_gravity;
 UICollisionBehavior *_collision;
 
+int count;
+
 - (void)viewDidLoad {
     [super viewDidLoad];
-    UIView *square = [[UIView alloc] initWithFrame:CGRectMake(100,100,100,100)];
+
+    count = 0;
+    UIView *square = [[UIView alloc] initWithFrame:CGRectMake(100, 100, 100, 100)];
     [square setBackgroundColor:[UIColor redColor]];
     [self.view addSubview:square];
 
@@ -43,10 +47,54 @@ UICollisionBehavior *_collision;
     _collision = [[UICollisionBehavior alloc] initWithItems:@[square]];
     [_collision setTranslatesReferenceBoundsIntoBoundary:YES];
     [_collision addBoundaryWithIdentifier:@"barrier" fromPoint:barrier.frame.origin toPoint:rightEdge];
+    [_collision setCollisionDelegate:self];
 
+//    [_collision setAction:^{
+//        NSLog(
+//                @"%@, %@",
+//                NSStringFromCGAffineTransform(square.transform),
+//                NSStringFromCGPoint(square.center)
+//        );
+//    }];
+
+
+    UIDynamicItemBehavior *itemBehavior = [[UIDynamicItemBehavior alloc]
+            initWithItems:@[square]];
+    [itemBehavior setElasticity:1.0];
 
     [_animator addBehavior:_collision];
+    [_animator addBehavior:itemBehavior];
 
+}
+
+- (void)collisionBehavior:(UICollisionBehavior *)behavior
+      beganContactForItem:(id <UIDynamicItem>)item
+   withBoundaryIdentifier:(id <NSCopying>)identifier
+                  atPoint:(CGPoint)p {
+    NSLog(@"Method is invoked - %@", identifier);
+
+
+    UIView *sq = [[UIView alloc] initWithFrame:CGRectMake(30, 0, 15, 15)];
+    [sq setBackgroundColor:[UIColor grayColor]];
+    [self.view addSubview:sq];
+
+    UIDynamicItemBehavior *ib = [[UIDynamicItemBehavior alloc] initWithItems:@[sq]];
+    [ib setElasticity:1.1];
+
+    UIView *rect = [[UIView alloc] initWithFrame:CGRectMake(100, 100, 10, 10)];
+    [rect setBackgroundColor:[UIColor redColor]];
+    [self.view addSubview:rect];
+
+
+
+    UIView *view = (UIView *) item;
+
+    UIColor *tmp = [view backgroundColor];
+
+    [view setBackgroundColor:[UIColor yellowColor]];
+    [UIView animateWithDuration:0.3 animations:^{
+        [view setBackgroundColor:tmp];
+    }];
 }
 
 - (void)didReceiveMemoryWarning {
@@ -54,5 +102,6 @@ UICollisionBehavior *_collision;
     // Dispose of any resources that can be recreated.
 }
 
+//TODO make a ping pong with elasticity 1.1
 
 @end
