@@ -14,57 +14,115 @@
 
 @end
 
-@implementation ViewController
+@implementation ViewController {
+
+}
 UIDynamicAnimator *_animator;
 UIGravityBehavior *_gravity;
 UICollisionBehavior *_collision;
+UIDynamicItemBehavior *_ballBehavior;
 
-int count;
+//int count;
 
 - (void)viewDidLoad {
     [super viewDidLoad];
+    //count = 0;
+    const int barrierWidth = 130;
+    int barrierHeight = 20;
 
-    count = 0;
-    UIView *square = [[UIView alloc] initWithFrame:CGRectMake(100, 100, 100, 100)];
-    [square setBackgroundColor:[UIColor redColor]];
-    [self.view addSubview:square];
+    UIView *ball = [[UIView alloc] initWithFrame:CGRectMake(100, 200, 40, 40)];
+    [ball setBackgroundColor:[UIColor redColor]];
+    [self.view addSubview:ball];
 
-    UIView *barrier = [[UIView alloc] initWithFrame:CGRectMake(0, 300, 130, 20)];
+
+    //init barrier
+    UIView *barrier = [[UIView alloc] initWithFrame:CGRectMake(100, 100, barrierWidth, barrierHeight)];
     [barrier setBackgroundColor:[UIColor grayColor]];
     [self.view addSubview:barrier];
+    CGPoint rightEdge = CGPointMake(barrier.frame.origin.x + barrier.frame.size.width, barrier.frame.origin.y); //set barrier egde
 
-    CGPoint rightEdge = CGPointMake(
-            barrier.frame.origin.x + barrier.frame.size.width,
-            barrier.frame.origin.y
-    );
+
+    UIView *barrierOpponent = [[UIView alloc] initWithFrame:CGRectMake(100, 500, barrierWidth, barrierHeight)];
+    [barrierOpponent setBackgroundColor:[UIColor grayColor]];
+    [self.view addSubview:barrierOpponent];
+    //init opponents barrier
+
+    CGPoint rightEdgeOpponent = CGPointMake(barrierOpponent.frame.origin.x + barrierOpponent.frame.size.width, barrierOpponent.frame.origin.y); //set opponents barrier egde
+
+
+
+//    // Step 5: Move paddle
+//    self.attacher =
+//            [[UIAttachmentBehavior alloc]
+//                    initWithItem:self.paddleView
+//                attachedToAnchor:CGPointMake(CGRectGetMidX(self.paddleView.frame),
+//                        CGRectGetMidY(self.paddleView.frame))];
+
+    //Move paddle
+    self.attacher = [[UIAttachmentBehavior alloc]
+            initWithItem:barrierOpponent
+        attachedToAnchor:CGPointMake(CGRectGetMidX(barrierOpponent.frame),
+                CGRectGetMidY(barrierOpponent.frame))];
+
+
+    UITapGestureRecognizer *tapGR = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(tapped:)];
+    [self.view addGestureRecognizer:tapGR];
+
+
     _animator = [[UIDynamicAnimator alloc] initWithReferenceView:self.view];
-    _gravity = [[UIGravityBehavior alloc] initWithItems:@[square]];
-
-
+    _gravity = [[UIGravityBehavior alloc] initWithItems:@[ball]];
     [_animator addBehavior:_gravity];
 
 
-    _collision = [[UICollisionBehavior alloc] initWithItems:@[square]];
+
+    ////EXAMPLE FROM GITHUB:
+//    // Step 1: Add collisions
+//    self.collider = [[UICollisionBehavior alloc] initWithItems:@[self.ballView, self.paddleView]];
+//    self.collider.collisionDelegate = self;
+//    self.collider.collisionMode = UICollisionBehaviorModeEverything;
+//    self.collider.translatesReferenceBoundsIntoBoundary = YES;
+//    [self.animator addBehavior:self.collider];
+
+    //MY_NEW_CODE:
+    _collision = [[UICollisionBehavior alloc] initWithItems:@[ball, barrier, barrierOpponent]];
     [_collision setTranslatesReferenceBoundsIntoBoundary:YES];
-    [_collision addBoundaryWithIdentifier:@"barrier" fromPoint:barrier.frame.origin toPoint:rightEdge];
-    [_collision setCollisionDelegate:self];
-
-//    [_collision setAction:^{
-//        NSLog(
-//                @"%@, %@",
-//                NSStringFromCGAffineTransform(square.transform),
-//                NSStringFromCGPoint(square.center)
-//        );
-//    }];
+    _collision.collisionDelegate = self;
+    _collision.collisionMode = UICollisionBehaviorModeEverything;
+    _collision.translatesReferenceBoundsIntoBoundary = YES;
 
 
-    UIDynamicItemBehavior *itemBehavior = [[UIDynamicItemBehavior alloc]
-            initWithItems:@[square]];
-    [itemBehavior setElasticity:1.0];
 
+    //MY OLD CODE:
+//    _collision = [[UICollisionBehavior alloc] initWithItems:@[ball]];
+//    [_collision setTranslatesReferenceBoundsIntoBoundary:YES];
+//    [_collision addBoundaryWithIdentifier:@"barrier" fromPoint:barrier.frame.origin toPoint:rightEdge];
+//    [_collision addBoundaryWithIdentifier:@"barrierOpponent" fromPoint:barrierOpponent.frame.origin toPoint:rightEdgeOpponent];
+//    [_collision setCollisionDelegate:self];
+
+
+    _ballBehavior = [[UIDynamicItemBehavior alloc]
+            initWithItems:@[ball]];
+    _ballBehavior.allowsRotation = NO;
+    [_ballBehavior setElasticity:1.0];
+    [_ballBehavior setFriction:0];
+    [_ballBehavior setResistance:0];
+
+
+    // Heavy paddle
+
+    self.barrierDynamicProperties = [[UIDynamicItemBehavior alloc] initWithItems:@[barrier, barrierOpponent]];
+    self.barrierDynamicProperties.allowsRotation = NO;
+    _barrierDynamicProperties.density = 1000.0f;
+
+    [_animator addBehavior:self.barrierDynamicProperties];
     [_animator addBehavior:_collision];
-    [_animator addBehavior:itemBehavior];
+    [_animator addBehavior:_ballBehavior];
+    [_animator addBehavior:_attacher];
 
+}
+
+- (void)tapped:(UIGestureRecognizer *)gr {
+    self.attacher.anchorPoint = [gr locationInView:self.view];
 }
 
 - (void)collisionBehavior:(UICollisionBehavior *)behavior
@@ -74,17 +132,16 @@ int count;
     NSLog(@"Method is invoked - %@", identifier);
 
 
-    UIView *sq = [[UIView alloc] initWithFrame:CGRectMake(30, 0, 15, 15)];
-    [sq setBackgroundColor:[UIColor grayColor]];
-    [self.view addSubview:sq];
+//    UIView *sq = [[UIView alloc] initWithFrame:CGRectMake(30, 0, 15, 15)];
+//    [sq setBackgroundColor:[UIColor grayColor]];
+//    [self.view addSubview:sq];
 
-    UIDynamicItemBehavior *ib = [[UIDynamicItemBehavior alloc] initWithItems:@[sq]];
-    [ib setElasticity:1.1];
+    //UIDynamicItemBehavior *ib = [[UIDynamicItemBehavior alloc] initWithItems:@[sq]];
+    //[ib setElasticity:1.1];
 
-    UIView *rect = [[UIView alloc] initWithFrame:CGRectMake(100, 100, 10, 10)];
-    [rect setBackgroundColor:[UIColor redColor]];
-    [self.view addSubview:rect];
-
+//    UIView *rect = [[UIView alloc] initWithFrame:CGRectMake(100, 100, 10, 10)];
+//    [rect setBackgroundColor:[UIColor redColor]];
+//    [self.view addSubview:rect];
 
 
     UIView *view = (UIView *) item;
@@ -92,7 +149,7 @@ int count;
     UIColor *tmp = [view backgroundColor];
 
     [view setBackgroundColor:[UIColor yellowColor]];
-    [UIView animateWithDuration:0.3 animations:^{
+    [UIView animateWithDuration:0.5 animations:^{
         [view setBackgroundColor:tmp];
     }];
 }

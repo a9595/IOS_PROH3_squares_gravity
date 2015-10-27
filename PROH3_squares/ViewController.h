@@ -10,7 +10,9 @@
 #import <UIKit/UIKit.h>
 
 
-@interface ViewController : UIViewController
+@interface ViewController : UIViewController <UICollisionBehaviorDelegate>
 
 
+@property(nonatomic, strong) UIAttachmentBehavior *attacher;
+@property(nonatomic, strong) UIDynamicItemBehavior *barrierDynamicProperties;
 @end
