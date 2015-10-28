@@ -16,6 +16,14 @@
 
 @implementation ViewController {
 
+    UIView *_ball;
+    int _barrierWidth;
+    int _barrierHeight;
+    UIView *_barrier;
+    CGPoint _rightEdge;
+    UIView *_barrierOpponent;
+    CGPoint _rightEdgeOpponent;
+    UITapGestureRecognizer *_tapGR;
 }
 UIDynamicAnimator *_animator;
 UIGravityBehavior *_gravity;
@@ -27,64 +35,77 @@ UIDynamicItemBehavior *_ballBehavior;
 - (void)viewDidLoad {
     [super viewDidLoad];
     //count = 0;
-    const int barrierWidth = 130;
-    int barrierHeight = 20;
+    _barrierWidth = 130;
+    _barrierHeight = 20;
 
-    UIView *ball = [[UIView alloc] initWithFrame:CGRectMake(100, 200, 40, 40)];
-    [ball setBackgroundColor:[UIColor redColor]];
-    [self.view addSubview:ball];
+    //init ball
+    _ball = [[UIView alloc] initWithFrame:CGRectMake(100, 200, 40, 40)];
+    [_ball setBackgroundColor:[UIColor redColor]];
+    _ball.layer.cornerRadius = 32.0;
+    _ball.layer.borderColor = [UIColor blackColor].CGColor;
+    _ball.layer.borderWidth = 2.0;
+    _ball.layer.shadowOffset = CGSizeMake(5, 8);
+    _ball.layer.shadowOpacity = 0.5;
+
+    [self.view addSubview:_ball];
+    
+    //PUSHER
+
+    //self.pusher = [[UIPushBehavior alloc] initWithItems:@[_ball]];
+    //self.pusher.push
+// Start ball off with a push
+//er    self.pusher = [[UIPushBehavior alloc] initWithItems:@[self.ballView]
+//                                                   mode:UIPushBehaviorModeInstantaneous];
+//    self.pusher.pushDirection = CGVectorMake(0.5, 1.0);
+//    self.pusher.active = YES; // Because push is instantaneous, it will only happen once
+//    [self.animator addBehavior:self.pusher];    
+//    
+
 
 
     //init barrier
-    UIView *barrier = [[UIView alloc] initWithFrame:CGRectMake(100, 100, barrierWidth, barrierHeight)];
-    [barrier setBackgroundColor:[UIColor grayColor]];
-    [self.view addSubview:barrier];
-    CGPoint rightEdge = CGPointMake(barrier.frame.origin.x + barrier.frame.size.width, barrier.frame.origin.y); //set barrier egde
+    _barrier = [[UIView alloc] initWithFrame:CGRectMake(100, 100, _barrierWidth, _barrierHeight)];
+    [_barrier setBackgroundColor:[UIColor grayColor]];
+    [self.view addSubview:_barrier];
+    _rightEdge = CGPointMake(_barrier.frame.origin.x + _barrier.frame.size.width, _barrier.frame.origin.y); //set barrier egde
 
 
-    UIView *barrierOpponent = [[UIView alloc] initWithFrame:CGRectMake(100, 500, barrierWidth, barrierHeight)];
-    [barrierOpponent setBackgroundColor:[UIColor grayColor]];
-    [self.view addSubview:barrierOpponent];
+    //init opponent's barrier
+    _barrierOpponent = [[UIView alloc] initWithFrame:CGRectMake(100, 500, _barrierWidth, _barrierHeight)];
+    [_barrierOpponent setBackgroundColor:[UIColor grayColor]];
+    _barrierOpponent.layer.cornerRadius = 8.0;
+    _barrierOpponent.layer.borderWidth = 2.0;
+    _barrierOpponent.layer.borderColor = [UIColor blackColor].CGColor;
+    _barrierOpponent.layer.shadowOffset = CGSizeMake(5, 8);
+    _barrierOpponent.layer.shadowOpacity = 0.5;
+    [self.view addSubview:_barrierOpponent];
     //init opponents barrier
 
-    CGPoint rightEdgeOpponent = CGPointMake(barrierOpponent.frame.origin.x + barrierOpponent.frame.size.width, barrierOpponent.frame.origin.y); //set opponents barrier egde
+    _rightEdgeOpponent = CGPointMake(_barrierOpponent.frame.origin.x + _barrierOpponent.frame.size.width, _barrierOpponent.frame.origin.y); //set opponents barrier edge
 
 
 
-//    // Step 5: Move paddle
-//    self.attacher =
-//            [[UIAttachmentBehavior alloc]
-//                    initWithItem:self.paddleView
-//                attachedToAnchor:CGPointMake(CGRectGetMidX(self.paddleView.frame),
-//                        CGRectGetMidY(self.paddleView.frame))];
 
-    //Move paddle
+
+    //Move barrier
     self.attacher = [[UIAttachmentBehavior alloc]
-            initWithItem:barrierOpponent
-        attachedToAnchor:CGPointMake(CGRectGetMidX(barrierOpponent.frame),
-                CGRectGetMidY(barrierOpponent.frame))];
+            initWithItem:_barrierOpponent
+        attachedToAnchor:CGPointMake(CGRectGetMidX(_barrierOpponent.frame),
+                CGRectGetMidY(_barrierOpponent.frame))];
 
-
-    UITapGestureRecognizer *tapGR = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(tapped:)];
-    [self.view addGestureRecognizer:tapGR];
+    _tapGR = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(tapped:)];
+    [self.view addGestureRecognizer:_tapGR];
 
 
     _animator = [[UIDynamicAnimator alloc] initWithReferenceView:self.view];
-    _gravity = [[UIGravityBehavior alloc] initWithItems:@[ball]];
+    _gravity = [[UIGravityBehavior alloc] initWithItems:@[_ball]];
     [_animator addBehavior:_gravity];
 
 
 
-    ////EXAMPLE FROM GITHUB:
-//    // Step 1: Add collisions
-//    self.collider = [[UICollisionBehavior alloc] initWithItems:@[self.ballView, self.paddleView]];
-//    self.collider.collisionDelegate = self;
-//    self.collider.collisionMode = UICollisionBehaviorModeEverything;
-//    self.collider.translatesReferenceBoundsIntoBoundary = YES;
-//    [self.animator addBehavior:self.collider];
 
-    //MY_NEW_CODE:
-    _collision = [[UICollisionBehavior alloc] initWithItems:@[ball, barrier, barrierOpponent]];
+    //set collision
+    _collision = [[UICollisionBehavior alloc] initWithItems:@[_ball, _barrier, _barrierOpponent]];
     [_collision setTranslatesReferenceBoundsIntoBoundary:YES];
     _collision.collisionDelegate = self;
     _collision.collisionMode = UICollisionBehaviorModeEverything;
@@ -92,25 +113,16 @@ UIDynamicItemBehavior *_ballBehavior;
 
 
 
-    //MY OLD CODE:
-//    _collision = [[UICollisionBehavior alloc] initWithItems:@[ball]];
-//    [_collision setTranslatesReferenceBoundsIntoBoundary:YES];
-//    [_collision addBoundaryWithIdentifier:@"barrier" fromPoint:barrier.frame.origin toPoint:rightEdge];
-//    [_collision addBoundaryWithIdentifier:@"barrierOpponent" fromPoint:barrierOpponent.frame.origin toPoint:rightEdgeOpponent];
-//    [_collision setCollisionDelegate:self];
-
-
     _ballBehavior = [[UIDynamicItemBehavior alloc]
-            initWithItems:@[ball]];
+            initWithItems:@[_ball]];
     _ballBehavior.allowsRotation = NO;
-    [_ballBehavior setElasticity:1.0];
+    [_ballBehavior setElasticity:1.05];
     [_ballBehavior setFriction:0];
     [_ballBehavior setResistance:0];
 
 
-    // Heavy paddle
-
-    self.barrierDynamicProperties = [[UIDynamicItemBehavior alloc] initWithItems:@[barrier, barrierOpponent]];
+    // Heavy barrier
+    self.barrierDynamicProperties = [[UIDynamicItemBehavior alloc] initWithItems:@[_barrier, _barrierOpponent]];
     self.barrierDynamicProperties.allowsRotation = NO;
     _barrierDynamicProperties.density = 1000.0f;
 
